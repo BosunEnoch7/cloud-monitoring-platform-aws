@@ -35,6 +35,11 @@ and Alertmanager when troubleshooting.
 
 - The instance is in a public subnet and receives a public IPv4 address for
   package downloads. It has no default inbound rules.
+- Outbound access is unrestricted because the host must reach package
+  repositories, image registries, SSM, CloudWatch, and Slack without a NAT
+  gateway or VPC endpoints.
+- SNS uses the AWS-managed service key to avoid the fixed cost of a
+  customer-managed KMS key in this development environment.
 - Grafana uses HTTP over an encrypted SSM tunnel. A production shared service
   should terminate HTTPS at a controlled ingress layer.
 - cAdvisor runs privileged and reads host runtime paths. This is required for
@@ -42,6 +47,9 @@ and Alertmanager when troubleshooting.
 - The SSM managed policy is AWS-managed and broader than the custom CloudWatch
   Logs policy.
 - Container images are pinned to versions but not immutable digests.
+
+These three cost-driven infrastructure decisions are explicit Trivy exceptions
+in `.trivyignore`; all other high and critical findings remain blocking.
 
 ## Production Evolution
 

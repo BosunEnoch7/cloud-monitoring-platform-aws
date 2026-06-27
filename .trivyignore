@@ -1,0 +1,8 @@
+# Accepted dev architecture: public IPv4 avoids a billable NAT gateway.
+AVD-AWS-0164
+
+# Required for package repositories, container registries, SSM, CloudWatch, and Slack.
+AVD-AWS-0104
+
+# AWS-managed SNS encryption avoids a customer-managed KMS key's fixed monthly cost.
+AVD-AWS-0136
