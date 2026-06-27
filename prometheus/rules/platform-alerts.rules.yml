@@ -1,0 +1,70 @@
+groups:
+  - name: platform-availability
+    rules:
+      - alert: MonitoringTargetDown
+        expr: up{job=~"node-exporter|cadvisor|alertmanager"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Monitoring target {{ $labels.instance }} is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been unreachable for more than two minutes."
+          runbook_url: "docs/troubleshooting.md"
+
+      - alert: PrometheusRuleEvaluationFailures
+        expr: increase(prometheus_rule_evaluation_failures_total[10m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Prometheus rule evaluations are failing"
+          description: "Prometheus reported rule evaluation failures during the last ten minutes."
+          runbook_url: "docs/troubleshooting.md"
+
+  - name: host-capacity
+    rules:
+      - alert: HostHighCpuUtilization
+        expr: instance:node_cpu_utilisation:rate5m > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU utilization on {{ $labels.instance }}"
+          description: "CPU utilization has exceeded 85% for ten minutes."
+          runbook_url: "docs/troubleshooting.md"
+
+      - alert: HostHighMemoryUtilization
+        expr: instance:node_memory_utilisation:ratio > 0.90
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory utilization on {{ $labels.instance }}"
+          description: "Memory utilization has exceeded 90% for ten minutes."
+          runbook_url: "docs/troubleshooting.md"
+
+      - alert: HostFilesystemSpaceLow
+        expr: instance:node_filesystem_utilisation:ratio > 0.85
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Filesystem space is low on {{ $labels.instance }}"
+          description: "{{ $labels.mountpoint }} has exceeded 85% utilization for fifteen minutes."
+          runbook_url: "docs/troubleshooting.md"
+
+      - alert: HostFilesystemSpaceCritical
+        expr: instance:node_filesystem_utilisation:ratio > 0.95
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Filesystem space is critically low on {{ $labels.instance }}"
+          description: "{{ $labels.mountpoint }} has exceeded 95% utilization for five minutes."
+          runbook_url: "docs/troubleshooting.md"

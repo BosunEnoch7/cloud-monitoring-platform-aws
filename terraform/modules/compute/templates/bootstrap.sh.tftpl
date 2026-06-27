@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly LOG_FILE="/var/log/cloud-monitoring-bootstrap.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "Starting monitoring host bootstrap at $(date --iso-8601=seconds)"
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y --no-install-recommends \
+  ca-certificates \
+  curl \
+  git \
+  unattended-upgrades
+
+cat >/etc/ssh/sshd_config.d/99-cloud-monitoring-hardening.conf <<'EOF'
+PasswordAuthentication no
+PermitRootLogin no
+X11Forwarding no
+AllowTcpForwarding yes
+EOF
+systemctl reload ssh
+
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+. /etc/os-release
+cat >/etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $VERSION_CODENAME
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+apt-get update
+apt-get install -y --no-install-recommends \
+  docker-ce \
+  docker-ce-cli \
+  containerd.io \
+  docker-buildx-plugin \
+  docker-compose-plugin
+
+cat >/etc/docker/daemon.json <<'EOF'
+{
+  "live-restore": true,
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-file": "3",
+    "max-size": "10m"
+  }
+}
+EOF
+
+systemctl enable --now docker
+usermod -aG docker ubuntu
+
+dpkg-reconfigure -f noninteractive unattended-upgrades
+
+curl -fsSL \
+  "https://amazoncloudwatch-agent-${aws_region}.s3.${aws_region}.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb" \
+  -o /tmp/amazon-cloudwatch-agent.deb
+dpkg -i /tmp/amazon-cloudwatch-agent.deb
+rm -f /tmp/amazon-cloudwatch-agent.deb
+
+cat >/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'EOF'
+${cloudwatch_agent_config}
+EOF
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config \
+  -m ec2 \
+  -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+install -d -o ubuntu -g ubuntu -m 0750 /opt/cloud-monitoring-platform
+
+docker --version
+docker compose version
+systemctl is-active --quiet docker
+systemctl is-active --quiet amazon-cloudwatch-agent
+
+touch /var/lib/cloud-monitoring-bootstrap.complete
+echo "Monitoring host bootstrap completed at $(date --iso-8601=seconds)"

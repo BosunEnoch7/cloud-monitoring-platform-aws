@@ -1,0 +1,41 @@
+flowchart TB
+  developer[Developer] --> github[GitHub repository]
+  github --> actions[GitHub Actions validation]
+  actions --> terraform[Terraform modules]
+
+  subgraph aws[AWS account]
+    subgraph vpc[VPC]
+      igw[Internet Gateway]
+      subnet[Public subnet]
+      sg[Security group: no default ingress]
+
+      subgraph ec2[Ubuntu EC2 monitoring host]
+        ssm[SSM Agent]
+        cwagent[CloudWatch Agent]
+
+        subgraph compose[Docker Compose network]
+          prometheus[Prometheus]
+          node[Node Exporter]
+          cadvisor[cAdvisor]
+          grafana[Grafana]
+          alertmanager[Alertmanager]
+        end
+      end
+    end
+
+    logs[CloudWatch Logs]
+    alarms[CloudWatch Alarms]
+    sns[Encrypted SNS topic]
+  end
+
+  terraform --> vpc
+  igw --> subnet
+  subnet --> sg --> ec2
+  developer -. SSM session and port forwarding .-> ssm
+  node --> prometheus
+  cadvisor --> prometheus
+  prometheus --> grafana
+  prometheus --> alertmanager
+  cwagent --> logs
+  ec2 --> alarms --> sns
+  alertmanager --> slack[Slack]

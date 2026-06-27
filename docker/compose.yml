@@ -1,0 +1,175 @@
+name: cloud-monitoring-platform
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=2GB
+      - --web.enable-lifecycle
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+    restart: unless-stopped
+    read_only: true
+    mem_limit: 320m
+    cpus: 0.50
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - http://localhost:9090/-/healthy
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?Set GRAFANA_ADMIN_USER in docker/.env}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in docker/.env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_COOKIE_SECURE: "false"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ../grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    mem_limit: 256m
+    cpus: 0.40
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://localhost:3000/api/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ../alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    secrets:
+      - slack_webhook_url
+    networks:
+      - monitoring
+    restart: unless-stopped
+    read_only: true
+    mem_limit: 64m
+    cpus: 0.10
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - http://localhost:9093/-/healthy
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    container_name: node-exporter
+    command:
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($$|/)
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    expose:
+      - "9100"
+    networks:
+      - monitoring
+    restart: unless-stopped
+    read_only: true
+    mem_limit: 64m
+    cpus: 0.20
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    container_name: cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    expose:
+      - "8080"
+    networks:
+      - monitoring
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.30
+
+networks:
+  monitoring:
+    name: monitoring
+    driver: bridge
+
+secrets:
+  slack_webhook_url:
+    file: ${ALERTMANAGER_SLACK_WEBHOOK_FILE:-../alertmanager/secrets/slack_webhook_url.example}
+
+volumes:
+  alertmanager_data:
+    name: alertmanager_data
+  grafana_data:
+    name: grafana_data
+  prometheus_data:
+    name: prometheus_data
