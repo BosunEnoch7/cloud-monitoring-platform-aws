@@ -8,8 +8,9 @@ log collection, dashboards as code, alert routing, least-privilege IAM,
 security-first administration, CI validation, and operational documentation.
 
 > Status: implementation, AWS deployment validation, and portfolio evidence
-> capture complete. The environment is intentionally short-lived to control
-> cost.
+> capture complete. The short-lived AWS environment was destroyed with
+> Terraform after evidence collection, and no project infrastructure remains
+> active.
 
 ## Architecture
 
