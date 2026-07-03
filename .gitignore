@@ -26,3 +26,6 @@ Thumbs.db
 docker/.env
 alertmanager/secrets/*
 !alertmanager/secrets/*.example
+
+# Private career notes
+docs/interview-guide.md

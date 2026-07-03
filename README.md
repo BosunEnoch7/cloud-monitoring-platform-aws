@@ -137,7 +137,6 @@ and SNS can incur charges.
 - [Cost control](docs/cost-control.md)
 - [Troubleshooting runbook](docs/troubleshooting.md)
 - [Lessons learned](docs/lessons-learned.md)
-- [Interview guide](docs/interview-guide.md)
 - [Screenshot checklist](screenshots/README.md)
 
 ## Production Evolution
