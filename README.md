@@ -7,8 +7,9 @@ The project demonstrates infrastructure as code, Linux automation, metrics and
 log collection, dashboards as code, alert routing, least-privilege IAM,
 security-first administration, CI validation, and operational documentation.
 
-> Status: implementation and local validation complete. AWS deployment and
-> portfolio screenshots are intentionally pending to avoid unapproved charges.
+> Status: implementation, AWS deployment validation, and portfolio evidence
+> capture complete. The environment is intentionally short-lived to control
+> cost.
 
 ## Architecture
 
@@ -100,6 +101,32 @@ SSM access, runtime secrets, stack startup, smoke tests, and teardown.
 
 AWS services are not guaranteed to be free. EC2, public IPv4, EBS, CloudWatch,
 and SNS can incur charges.
+
+## Deployment Evidence
+
+### Grafana Platform Overview
+
+![Grafana platform overview showing host and container metrics](screenshots/grafana-platform-overview.png)
+
+### Prometheus Targets
+
+![Prometheus targets showing all exporters up](screenshots/prometheus-targets.png)
+
+### Prometheus Alert Rules
+
+![Prometheus host capacity and availability alert rules](screenshots/prometheus-alerts.png)
+
+### Alertmanager
+
+![Alertmanager runtime status](screenshots/alertmanager-status.png)
+
+### CloudWatch Alarms
+
+![CloudWatch alarms showing healthy status](screenshots/cloudwatch-alarms-console.png)
+
+### CloudWatch Alarm Detail
+
+![CloudWatch EC2 status-check alarm detail](screenshots/cloudwatch-status-alarm-detail.png)
 
 ## Documentation
 

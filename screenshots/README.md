@@ -1,7 +1,17 @@
 # Portfolio Evidence
 
-Add screenshots only after a real deployment. Redact account IDs, public IPs,
-email addresses, webhook URLs, tokens, and other secrets.
+These screenshots were captured from a real short-lived AWS deployment. Account
+IDs, public IPs, email addresses, webhook URLs, tokens, and secrets must remain
+excluded.
+
+## Captured Evidence
+
+- `grafana-platform-overview.png`: host and Docker telemetry
+- `prometheus-targets.png`: four healthy scrape targets
+- `prometheus-alerts.png`: six provisioned alert rules
+- `alertmanager-status.png`: Alertmanager runtime UI
+- `cloudwatch-alarms-console.png`: two healthy EC2 alarms
+- `cloudwatch-status-alarm-detail.png`: EC2 status-check alarm graph
 
 Recommended evidence:
 

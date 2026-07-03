@@ -51,6 +51,9 @@ apt-get install -y --no-install-recommends \
 cat >/etc/docker/daemon.json <<'EOF'
 {
   "live-restore": true,
+  "features": {
+    "containerd-snapshotter": false
+  },
   "log-driver": "json-file",
   "log-opts": {
     "max-file": "3",
