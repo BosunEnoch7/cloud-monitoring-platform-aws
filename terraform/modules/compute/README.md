@@ -32,4 +32,6 @@ is promoted beyond development.
 
 ## Cost Notes
 
-The default instance type is `t2.micro` and no Elastic IP is created. Public IPv4 usage may still create charges depending on the AWS account and current AWS pricing.
+The default instance type is `t3.micro` and no Elastic IP is created. Public
+IPv4 usage may still create charges depending on the AWS account and current
+AWS pricing.

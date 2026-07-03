@@ -8,7 +8,7 @@ subscription is disabled unless `alert_email` is explicitly configured.
 
 ## Current Cost-Aware Defaults
 
-- `t2.micro` EC2 instance type
+- `t3.micro` EC2 instance type
 - No Elastic IP
 - 12 GiB encrypted GP3 root volume
 - Single public subnet

@@ -21,7 +21,9 @@ PermitRootLogin no
 X11Forwarding no
 AllowTcpForwarding yes
 EOF
-systemctl reload ssh
+if systemctl is-active --quiet ssh; then
+  systemctl reload ssh
+fi
 
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
